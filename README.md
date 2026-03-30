@@ -1,12 +1,12 @@
 # Breast Cancer Classification with Scikit-Learn
 
-A binary classification project that predicts whether a breast mass is **benign** or **malignant** using the UCI Breast Cancer Wisconsin dataset and a Logistic Regression pipeline built with scikit-learn.
+A binary classification project that predicts whether a breast mass is **benign** or **malignant** using the UCI Breast Cancer Wisconsin dataset. Trains a Logistic Regression model via a scikit-learn pipeline, evaluates performance with a confusion matrix and classification report, and explores the sensitivity–specificity trade-off through ROC curve analysis.
 
 ## Dataset
 
 **Source:** [UCI Breast Cancer Wisconsin (Original)](https://archive-beta.ics.uci.edu/ml/datasets/breast+cancer+wisconsin+diagnostic)
 
-The dataset contains 699 patient records from digitised fine-needle aspirate (FNA) images of breast masses. Nine cell-morphology features are scored on a 1–10 scale:
+699 patient records derived from digitised fine-needle aspirate (FNA) images of breast masses. Nine cell-morphology features scored on a 1–10 scale:
 
 | # | Feature | Range |
 |---|---------|-------|
@@ -20,48 +20,68 @@ The dataset contains 699 patient records from digitised fine-needle aspirate (FN
 | 8 | Normal Nucleoli | 1 – 10 |
 | 9 | Mitoses | 1 – 10 |
 
-**Target:** Benign (2) vs Malignant (4) — 458 benign, 241 malignant.
+**Target:** Benign (0) vs Malignant (1) — 458 benign, 241 malignant.
 
-## Approach
+## Workflow
 
-### 1. Exploratory Data Analysis
-- Generated an automated profiling report using `ydata-profiling` to inspect distributions, correlations, and data quality at a glance.
-- Checked class balance and summary statistics across all features.
+### 1. Data Loading & Exploration
+- Loaded the CSV with pandas, treating `?` as NaN.
+- Inspected class balance, summary statistics, and distributions.
+- Generated an automated EDA report using `ydata-profiling`.
 
-### 2. Data Preprocessing
-- **Missing values:** Column 6 (*Bare Nuclei*) contained 16 missing entries (encoded as `?` in the raw CSV). These were imputed with the column mode (1.0).
-- **Feature / label split:** Columns 1–9 used as features, column 10 as the target label.
-- **Train / test split:** 70 % training, 30 % test, stratified by class (`random_state=42`).
+### 2. Preprocessing
+- **Missing values:** Column 6 (*Bare Nuclei*) had 16 missing entries, imputed with the column mode (1.0).
+- **Target encoding:** Converted the original labels (2 = benign, 4 = malignant) to binary (0 and 1).
+- **Train/test split:** 70/30, stratified by class (`random_state=42`).
 
 ### 3. Model Pipeline
-Built a scikit-learn `Pipeline` to ensure preprocessing is applied consistently:
+A scikit-learn `Pipeline` that standardises features before fitting:
 
 ```
 StandardScaler → LogisticRegression
 ```
 
 ### 4. Evaluation
-- Confusion matrix (visualised as a Seaborn heatmap)
-- Accuracy, precision, recall, and F1-score via `classification_report`
 
-## Results
+**Confusion Matrix:**
 
-| Metric | Benign (2) | Malignant (4) |
+|  | Predicted Benign | Predicted Malignant |
+|--|-----------------|-------------------|
+| **Actual Benign** | 133 | 5 |
+| **Actual Malignant** | 4 | 68 |
+
+**Per-class metrics:**
+
+| Metric | Benign (0) | Malignant (1) |
 |--------|-----------|--------------|
 | Precision | 0.97 | 0.93 |
 | Recall | 0.96 | 0.94 |
 | F1-Score | 0.97 | 0.94 |
 
-**Overall accuracy: 95.7 %**
+**Overall accuracy: 95.7%**
 
-The model performs well on both classes. The dataset is reasonably balanced (65 % benign / 35 % malignant), so accuracy is a reliable metric here.
+**Sensitivity (recall for malignant):** 94.4% — the model correctly identifies 94.4% of malignant cases.
+
+**Specificity (recall for benign):** 96.4% — the model correctly rules out 96.4% of benign cases.
+
+### 5. ROC Curve & Threshold Analysis
+
+Used `predict_proba` to obtain malignant-class probabilities and swept the decision threshold to generate an ROC curve.
+
+**AUC Score: 0.993** — the model has excellent discriminative ability.
+
+**Key findings from varying the threshold:**
+
+- **Threshold = 0:** Every patient is classified as malignant → Sensitivity = 100%, Specificity = 0%. You catch all cancers but flag every healthy patient too.
+- **Threshold = 1:** No patient is classified as malignant → Sensitivity = 0%, Specificity = 100%. You never raise a false alarm but miss every cancer.
+- **Target sensitivity ≈ 95%:** The ROC curve reveals the corresponding specificity trade-off at that operating point.
 
 ## Tech Stack
 
 - Python 3
 - pandas, NumPy
 - Matplotlib, Seaborn
-- scikit-learn (`LogisticRegression`, `StandardScaler`, `Pipeline`, `train_test_split`, `confusion_matrix`, `classification_report`)
+- scikit-learn (`LogisticRegression`, `StandardScaler`, `Pipeline`, `train_test_split`, `confusion_matrix`, `classification_report`, `roc_curve`, `roc_auc_score`)
 - ydata-profiling
 
 ## How to Run
@@ -75,13 +95,13 @@ pip install pandas numpy matplotlib seaborn scikit-learn ydata-profiling jupyter
 jupyter notebook
 ```
 
-Open `Day1-Block1-Exercises.ipynb` and run all cells. Update the CSV file path in the first code cell to match your local data location.
+Open `Breast_cancer_classification.ipynb` and run all cells. Update the CSV path in the data-loading cell to match your local file location.
 
 ## Project Structure
 
 ```
 breast-cancer-classification-sklearn/
-├── Day1-Block1-Exercises.ipynb   # Main notebook
+├── Breast_cancer_classification.ipynb   # Main notebook
 ├── data/
 │   └── breast-cancer-wisconsin.csv
 └── README.md
@@ -90,4 +110,3 @@ breast-cancer-classification-sklearn/
 ## License
 
 Educational project — part of a supervised learning lab module.
-
